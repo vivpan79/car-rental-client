@@ -1,5 +1,6 @@
 package com.infor.carrental.client;
 
+import static java.lang.Thread.sleep;
 import static java.time.LocalDateTime.now;
 import static java.time.format.DateTimeFormatter.ofPattern;
 
@@ -22,6 +23,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
@@ -41,15 +43,27 @@ public class ConsumingRestApplication {
     @Bean
     public CommandLineRunner run(RestTemplate restTemplate) throws Exception {
         return args -> {
-            registerCars(restTemplate);
-            getCars(restTemplate);
-            registerCustomer(restTemplate);
-            getCustomers(restTemplate);
-            registerAvailability(restTemplate);
-            getAvailability(restTemplate);
-            registerBooking(restTemplate);
-            getBooking(restTemplate);
+            for (; ; ) {
+                regressionTest(restTemplate);
+                regressionTest(restTemplate);
+                regressionTest(restTemplate);
+                regressionTest(restTemplate);
+                regressionTest(restTemplate);
+                sleep(1000);
+            }
         };
+    }
+
+    @Async
+    private void regressionTest(RestTemplate restTemplate) {
+        registerCars(restTemplate);
+        getCars(restTemplate);
+        registerCustomer(restTemplate);
+        getCustomers(restTemplate);
+        registerAvailability(restTemplate);
+        getAvailability(restTemplate);
+        registerBooking(restTemplate);
+        getBooking(restTemplate);
     }
 
     private RestCar registerCars(RestTemplate restTemplate) {
@@ -70,7 +84,7 @@ public class ConsumingRestApplication {
     private void getCars(RestTemplate restTemplate) {
         RestCars restCars = restTemplate.getForObject(
             "http://localhost:8080/car", RestCars.class);
-        log.info(restCars.getRestCars().stream().map(x -> x.getNumberPlate()).collect(Collectors.joining()));
+        log.info(restCars.getRestCars().stream().map(x -> x.getNumberPlate()).collect(Collectors.joining(";")));
     }
 
     private RestCustomer registerCustomer(RestTemplate restTemplate) {
@@ -84,7 +98,7 @@ public class ConsumingRestApplication {
 
     private RestCustomer getRestCustomer() {
         RestCustomer restCustomer = new RestCustomer();
-        restCustomer.setUserName("ABC" + new Random().nextInt(1000));
+        restCustomer.setUserName("ABC" + new Random().nextInt());
         restCustomer.setPassword("password");
         return restCustomer;
     }
@@ -92,7 +106,7 @@ public class ConsumingRestApplication {
     private void getCustomers(RestTemplate restTemplate) {
         RestCustomers restCustomers = restTemplate.getForObject(
             "http://localhost:8080/customer", RestCustomers.class);
-        log.info(restCustomers.getRestCustomers().stream().map(x -> x.getUserName()).collect(Collectors.joining()));
+        log.info(restCustomers.getRestCustomers().stream().map(x -> x.getUserName()).collect(Collectors.joining(";")));
     }
 
     private void registerAvailability(RestTemplate restTemplate) {
@@ -113,7 +127,7 @@ public class ConsumingRestApplication {
         RestAvailabilities availabilities = restTemplate.getForObject(
             "http://localhost:8080/availability", RestAvailabilities.class);
         log.info(availabilities.getRestAvailabilityList().stream().map(x -> x.getCar().getNumberPlate())
-            .collect(Collectors.joining()));
+            .collect(Collectors.joining(";")));
     }
 
     private void registerBooking(RestTemplate restTemplate) {
@@ -143,6 +157,6 @@ public class ConsumingRestApplication {
         RestBookings restBookings = restTemplate.getForObject(
             "http://localhost:8080/booking", RestBookings.class);
         log.info(restBookings.getRestBookings().stream().map(x -> x.getCar().getNumberPlate())
-            .collect(Collectors.joining()));
+            .collect(Collectors.joining(";")));
     }
 }
