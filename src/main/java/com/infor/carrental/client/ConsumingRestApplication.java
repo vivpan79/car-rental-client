@@ -64,6 +64,9 @@ public class ConsumingRestApplication {
         getAvailability(restTemplate);
         registerBooking(restTemplate);
         getBooking(restTemplate);
+        findBookedCars(restTemplate);
+        getCarBookingFrequency(restTemplate);
+        getCarBookingPayment(restTemplate);
     }
 
     private RestCar registerCars(RestTemplate restTemplate) {
@@ -84,7 +87,9 @@ public class ConsumingRestApplication {
     private void getCars(RestTemplate restTemplate) {
         RestCars restCars = restTemplate.getForObject(
             "http://localhost:8080/car", RestCars.class);
-        log.info(restCars.getRestCars().stream().map(x -> x.getNumberPlate()).collect(Collectors.joining(";")));
+        log.info("All cars: {}",
+            restCars.getRestCars().stream().map(x -> x.getNumberPlate())
+            .collect(Collectors.joining(";")));
     }
 
     private RestCustomer registerCustomer(RestTemplate restTemplate) {
@@ -106,7 +111,9 @@ public class ConsumingRestApplication {
     private void getCustomers(RestTemplate restTemplate) {
         RestCustomers restCustomers = restTemplate.getForObject(
             "http://localhost:8080/customer", RestCustomers.class);
-        log.info(restCustomers.getRestCustomers().stream().map(x -> x.getUserName()).collect(Collectors.joining(";")));
+        log.info("All customers: {}",
+            restCustomers.getRestCustomers().stream().map(x -> x.getUserName())
+                .collect(Collectors.joining(";")));
     }
 
     private void registerAvailability(RestTemplate restTemplate) {
@@ -126,8 +133,9 @@ public class ConsumingRestApplication {
     private void getAvailability(RestTemplate restTemplate) {
         RestAvailabilities availabilities = restTemplate.getForObject(
             "http://localhost:8080/availability", RestAvailabilities.class);
-        log.info(availabilities.getRestAvailabilityList().stream().map(x -> x.getCar().getNumberPlate())
-            .collect(Collectors.joining(";")));
+        log.info("All available cars: {}",
+            availabilities.getRestAvailabilityList().stream().map(x -> x.getCar().getNumberPlate())
+                .collect(Collectors.joining(";")));
     }
 
     private void registerBooking(RestTemplate restTemplate) {
@@ -156,7 +164,44 @@ public class ConsumingRestApplication {
     private void getBooking(RestTemplate restTemplate) {
         RestBookings restBookings = restTemplate.getForObject(
             "http://localhost:8080/booking", RestBookings.class);
-        log.info(restBookings.getRestBookings().stream().map(x -> x.getCar().getNumberPlate())
-            .collect(Collectors.joining(";")));
+        log.info("All booked cars: {}",
+            restBookings.getRestBookings().stream().map(x -> x.getCar().getNumberPlate())
+                .collect(Collectors.joining(";")));
+    }
+
+    private void findBookedCars(RestTemplate restTemplate) {
+        LocalDateTime date = now();
+        DateTimeFormatter formatter = ofPattern("yyyy-MM-dd'T'HH:mm");
+        RestCars restCars = restTemplate.getForObject(
+            "http://localhost:8080/booking"
+                + "/find/from/" + formatter.format(date)
+                + "/to/" + formatter.format(date.plusMonths(6L))
+            , RestCars.class);
+        log.info("All booked cars between dates: {}",
+            restCars.getRestCars().stream().map(x -> x.getNumberPlate())
+                .collect(Collectors.joining(";"))
+        );
+    }
+
+    private void getCarBookingFrequency(RestTemplate restTemplate) {
+        LocalDateTime date = now();
+        DateTimeFormatter formatter = ofPattern("yyyy-MM-dd'T'HH:mm");
+        Double frequency = restTemplate.getForObject(
+            "http://localhost:8080/booking"
+                + "/frequency/from/" + formatter.format(date)
+                + "/to/" + formatter.format(date.plusMonths(6L))
+            , Double.class);
+        log.info("Car booking frequency: {}", frequency);
+    }
+
+    private void getCarBookingPayment(RestTemplate restTemplate) {
+        LocalDateTime date = now();
+        DateTimeFormatter formatter = ofPattern("yyyy-MM-dd'T'HH:mm");
+        Long payments = restTemplate.getForObject(
+            "http://localhost:8080/booking"
+                + "/payments/from/" + formatter.format(date)
+                + "/to/" + formatter.format(date.plusMonths(6L))
+            , Long.class);
+        log.info("Total payment from car bookings between dates: {}", payments);
     }
 }
