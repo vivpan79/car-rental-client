@@ -1,0 +1,5 @@
+To build &amp; run with Maven:
+
+----
+./mvnw package && java -jar target/car-rental-client-0.1.0.jar
+----
